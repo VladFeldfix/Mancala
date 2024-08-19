@@ -16,13 +16,29 @@ class Mancala:
         self.computerGoal = 0
         self.playerGoal = 0
         self.turn = 'player'
+        self.computerMoves = []
         self.Display()
     
     def Select(self):
+        print("--------------------- "+self.turn+" TURN ---------------------")
         if self.turn == 'player':
             col = int(input("Select col 0-5 >"))
             selected_cell = [1,col]
             self.Move(selected_cell)
+        
+        if self.turn == 'computer':
+            if len(self.computerMoves) == 0:
+                self.computerMoves = self.Calculate()
+            else:
+                nextMove = self.computerMoves.pop()
+                print("Select col 0-5 >"+str(nextMove[1]))
+                self.Move(nextMove)
+        
+    def Calculate(self):
+        sudoBoard = self.board.copy()
+        for i in range(6):
+            print("   computer thinking the number"+str(i))
+        return [[0,0],]
 
     def Move(self, selected_cell): # selected_cell = [0 or 1, 0-7]
         print("\nPICK UP FROM:",selected_cell)
@@ -62,17 +78,26 @@ class Mancala:
                         self.computerGoal += 1
         
         self.Display()
-        if col != -1 and col != 6:
+
+        # end
+        if col != -1 and col != 6: # continue going
             if self.board[row][col] > 1: # if we landed on a not empty cell then
                 self.Move([row,col])
                 return
-        if self.turn == 'player' and col == 6:
-            print("\nSELECTING AGAIN")
+        
+        if self.turn == 'player' and col == 6: # player select again
             self.Select()
             return
     
-        # play again?
-        self.Start()
+        # end of turn
+        # change the turn
+        if self.turn == 'player':
+            self.turn = 'computer'
+        else:
+            self.turn ='player'
+        
+        # go
+        self.Select()
 
     def Display(self):
         print(self.board[0])
