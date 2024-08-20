@@ -20,6 +20,8 @@ class Mancala:
         self.computerGoal = 0
         self.playerGoal = 0
         self.makeDeeperTree = False
+        self.memory = {}
+        self.memory_index = 0
 
         # show board before game start
         self.Display()
@@ -41,13 +43,11 @@ class Mancala:
             self.Calculate()
 
     def Calculate(self):
-        input("CALCULATE")
-        tmpCompGoal = self.computerGoal # remember the goal that was before the calculation
-        tmpBoard = [[0,0,0,0,0,0],[0,0,0,0,0,0]] #remeber the table that was before the calculation
-        for row in range(2):
-            for col in range(6):
-                tmpBoard[row][col] = self.board[row][col]
-
+        print("CALCULATE")
+        self.Save()
+        for i in range(5):
+            self.Load()
+        """
         for i in range(5): # first try all 6 options to make a decision tree
             self.computerGoal = tmpCompGoal # go back to the goal that was before
             for row in range(2): # go back to the board that was before
@@ -64,6 +64,27 @@ class Mancala:
                     self.Calculate()
             else:
                 print("* this cell is empty")
+        """
+    
+    def Save(self):
+        print("SAVING BOARD")
+        print("* memory index",self.memory_index)
+        print("* computer goal",self.computerGoal)
+        tmpBoard = [[0,0,0,0,0,0],[0,0,0,0,0,0]]
+        for row in range(2):
+            for col in range(6):
+                tmpBoard[row][col] = self.board[row][col]
+        print("* board configuration",tmpBoard)
+        tmpGoal = self.computerGoal
+        self.memory[self.memory_index] = (tmpBoard, tmpGoal)
+        self.memory_index += 1
+    
+    def Load(self):
+        tmp = self.memory[self.memory_index-1]
+        for row in range(2):
+            for col in range(6):
+                self.board[row][col] = self.memory[][row][col]
+
     def Move(self, selected_cell, simulation):
         go_again = True
         row = selected_cell[0]
