@@ -80,10 +80,14 @@ class Mancala:
         self.memory_index += 1
     
     def Load(self):
+        print("LOADING BOARD")
+        print("* memory index",self.memory_index)
+        print("* computer goal",self.computerGoal)
         tmp = self.memory[self.memory_index-1]
         for row in range(2):
             for col in range(6):
-                self.board[row][col] = self.memory[][row][col]
+                print(row, col)
+                self.board[row][col] = self.memory[row][col]
 
     def Move(self, selected_cell, simulation):
         go_again = True
