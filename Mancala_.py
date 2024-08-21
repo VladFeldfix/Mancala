@@ -1,3 +1,10 @@
+class Node:
+    def __init__(self):
+        self.board = [[4,4,4,4,4,4],[4,4,4,4,4,4]] # this is the board before move
+        self.score = 0
+        self.next = [None,None,None,None,None,None]
+        self.prev = None
+
 class Mancala:
     def __init__(self):
         self.Start()
@@ -20,8 +27,7 @@ class Mancala:
         self.computerGoal = 0
         self.playerGoal = 0
         self.makeDeeperTree = False
-        self.memory = {}
-        self.memory_index = 0
+        self.pointer = Node()
 
         # show board before game start
         self.Display()
@@ -41,48 +47,98 @@ class Mancala:
         
         # computer turn
         elif self.turn == 'computer':
-            self.Calculate(0)
+        # save a copy of the board
+            self.Calculate()
 
-    def Calculate(self, tree_lvl):
-        print("\nCalculate:")
-        print("Calculate for tree lvl:",tree_lvl)
+    def Calculate(self):
+        input("\nCalculate:")
         self.Save()
+        for cell in range(5):
+            print("Board before move:",self.board)
+            print("[>] Computer select cell 0-5 >",cell)
+            if self.board[0][cell] > 0:
+                self.Move([0,cell], True)
+                self.pointer.next[cell] = Node()
+                tmp = self.pointer
+                self.pointer = self.pointer.next[cell]
+                self.pointer.prev = tmp
+                self.Save()
+                if not self.makeDeeperTree:
+                    print("[!] This tree gives",self.computerGoal,"points")
+                    self.pointer = self.pointer.prev
+                    self.Load()
+                else:
+                    print("[!] This tree has another level")
+                    self.makeDeeperTree = False
+                    self.Calculate()
+            
+            else:
+                print("[X] this cell is empty")
+                return
+
+        """
+        print("Calculate for tree lvl:",tree_lvl)
+        self.Save(tree_lvl)
         for cell in range(5):
             print("Running for cell",cell,"tree lvl:",tree_lvl)
             if self.board[0][cell] > 0:
-                self.Load()
+                self.Load(tree_lvl)
                 self.Move([0,cell], True)
                 if not self.makeDeeperTree:
                     print("[!] This tree gives",self.computerGoal,"points")
+                    tree_lvl = tree_lvl-1
                 else:
                     print("[!] This tree has another level")
                     self.makeDeeperTree = False
                     self.Calculate(tree_lvl+1)
             else:
                 print("[X] this cell is empty")
+        """
     
     def Save(self):
         print("\nSave:")
-        print("memory index",self.memory_index)
-        print("computer goal",self.computerGoal)
+        
+        # save a copy of the board
         tmpBoard = [[0,0,0,0,0,0],[0,0,0,0,0,0]]
         for row in range(2):
             for col in range(6):
                 tmpBoard[row][col] = self.board[row][col]
-        print("board configuration",tmpBoard)
+        
+        # save a copy of the goal
         tmpGoal = self.computerGoal
-        self.memory[self.memory_index] = (tmpBoard, tmpGoal)
-        self.memory_index += 1
+
+        # display for user
+        print("Saved board:",tmpBoard)
+        print("Saved score:",tmpGoal)
+
+        # save to database
+        self.pointer.board = tmpBoard
+        self.pointer.score = tmpGoal
     
     def Load(self):
         print("\nLoad:")
-        print("memory index",self.memory_index-1)
+
+        # load a copy of the board
+        for row in range(2):
+            for col in range(6):
+                self.board[row][col] = self.pointer.board[row][col]
+        
+        # load a copy of the goal
+        self.computerGoal = self.pointer.score
+
+        # display for user
+        print("Loaded board:",self.board)
+        print("Loaded score:",self.computerGoal)
+        """
+        print("\nLoad:")
+        print("memory index",lvl)
         print("computer goal",self.computerGoal)
-        tmp = self.memory[self.memory_index-1]
+        tmp = self.memory[lvl]
         for row in range(2):
             for col in range(6):
                 self.board[row][col] = tmp[0][row][col]
         print("board configuration",self.board)
+        """
 
     def Move(self, selected_cell, simulation):
         print("\nMove:")
