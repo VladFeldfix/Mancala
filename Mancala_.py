@@ -3,12 +3,12 @@ class Mancala:
         self.Start()
     
     def Start(self):
-        print("START")
+        print("\nStart:")
         self.Setup()
         self.Select()
     
     def Setup(self):
-        print('SETUP')
+        print('\nSetup:')
 
         # board
         #          [4,4,4,4,4,4] player
@@ -27,11 +27,12 @@ class Mancala:
         self.Display()
 
     def Select(self):
-        print("\n==================== TURN: "+self.turn.upper()+" ====================")
+        print("\nSelect:")
+        print("Waiting for input from:",self.turn)
 
         # player turn
         if self.turn == 'player':
-            col = int(input("PLAYER SELECT COL 0-5 >"))
+            col = int(input("[>] Player select cell 0-5 >"))
             selected_cell = [1,col]
             if self.board[1][col] > 0:
                 self.Move(selected_cell, False)
@@ -40,62 +41,57 @@ class Mancala:
         
         # computer turn
         elif self.turn == 'computer':
-            self.Calculate()
+            self.Calculate(0)
 
-    def Calculate(self):
-        print("CALCULATE")
+    def Calculate(self, tree_lvl):
+        print("\nCalculate:")
+        print("Calculate for tree lvl:",tree_lvl)
         self.Save()
-        for i in range(5):
-            self.Load()
-        """
-        for i in range(5): # first try all 6 options to make a decision tree
-            self.computerGoal = tmpCompGoal # go back to the goal that was before
-            for row in range(2): # go back to the board that was before
-                for col in range(6):
-                    self.board[row][col] = tmpBoard[row][col]
-            print("* calculating for cell",i)
-            if self.board[0][i] > 0: # if this cell is not empty
-                self.Move([0,i], True)
+        for cell in range(5):
+            print("Running for cell",cell,"tree lvl:",tree_lvl)
+            if self.board[0][cell] > 0:
+                self.Load()
+                self.Move([0,cell], True)
                 if not self.makeDeeperTree:
-                    print("* this tree gives",self.computerGoal,"points")
+                    print("[!] This tree gives",self.computerGoal,"points")
                 else:
-                    print("* this tree has another level")
+                    print("[!] This tree has another level")
                     self.makeDeeperTree = False
-                    self.Calculate()
+                    self.Calculate(tree_lvl+1)
             else:
-                print("* this cell is empty")
-        """
+                print("[X] this cell is empty")
     
     def Save(self):
-        print("SAVING BOARD")
-        print("* memory index",self.memory_index)
-        print("* computer goal",self.computerGoal)
+        print("\nSave:")
+        print("memory index",self.memory_index)
+        print("computer goal",self.computerGoal)
         tmpBoard = [[0,0,0,0,0,0],[0,0,0,0,0,0]]
         for row in range(2):
             for col in range(6):
                 tmpBoard[row][col] = self.board[row][col]
-        print("* board configuration",tmpBoard)
+        print("board configuration",tmpBoard)
         tmpGoal = self.computerGoal
         self.memory[self.memory_index] = (tmpBoard, tmpGoal)
         self.memory_index += 1
     
     def Load(self):
-        print("LOADING BOARD")
-        print("* memory index",self.memory_index)
-        print("* computer goal",self.computerGoal)
+        print("\nLoad:")
+        print("memory index",self.memory_index-1)
+        print("computer goal",self.computerGoal)
         tmp = self.memory[self.memory_index-1]
         for row in range(2):
             for col in range(6):
-                print(row, col)
-                self.board[row][col] = self.memory[row][col]
+                self.board[row][col] = tmp[0][row][col]
+        print("board configuration",self.board)
 
     def Move(self, selected_cell, simulation):
+        print("\nMove:")
         go_again = True
         row = selected_cell[0]
         col = selected_cell[1]
         while go_again:
             go_again = False
-            print("\nPICK FROM: "+str(row)+","+str(col))
+            print("Pick from: "+str(row)+","+str(col))
 
             # take all the stones from the selected cell to hand
             hand = self.board[row][col]
@@ -151,7 +147,7 @@ class Mancala:
 
 
     def Display(self):
-        print("DISPLAY")
+        print("\nDisplay:")
         print(self.board[0])
         print(self.board[1])
         print('Player Goal = ',self.playerGoal)
