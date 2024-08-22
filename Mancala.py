@@ -17,18 +17,18 @@ class Mancala:
         self.Select()
     
     def Setup(self):
-        #print('\nSetup:')
+        print('\nSetup:')
 
         # board
         #          [4,4,4,4,4,4] player
         # computer [4,4,4,4,4,4]
-        self.board = [[4,4,4,4,4,4],[4,4,4,4,4,4]]
-        #self.board = [[3,3,3,3,3,3],[3,3,3,3,3,3]]
+        #self.board = [[4,4,4,4,4,4],[4,4,4,4,4,4]]
+        self.board = [[0,0,0,0,0,0],[3,3,3,3,3,3]]
         #self.board = [[2,2,2,2,2,2],[2,2,2,2,2,2]]
         #self.board = [[1,1,1,1,1,1],[1,1,1,1,1,1]]
         
         # global variables
-        self.turn = 'computer'
+        self.turn = 'player'
         self.computerGoal = 0
         self.playerGoal = 0
         self.makeDeeperTree = False
@@ -41,12 +41,17 @@ class Mancala:
         self.Display()
     
     def Select(self):
-        #print("\nSelect:")
-        #print("Waiting for input from:",self.turn)
+        print("\nSelect:")
+        print("Waiting for input from:",self.turn)
 
         # player turn
         if self.turn == 'player':
-            col = int(input("[>] Player select cell 0-5 >"))
+            col = -1
+            while not col in (0,1,2,3,4,5):
+                try:
+                    col = int(input("[>] Player select cell 0-5 >"))
+                except:
+                    col = -1
             selected_cell = [1,col]
             if self.board[1][col] > 0:
                 self.Move(selected_cell, False)
@@ -56,10 +61,26 @@ class Mancala:
         
         # computer turn
         elif self.turn == 'computer':
-            # save a copy of the board
-            self.Save()
-            self.Calculate()
-    
+            if len(self.max_score_path) == 0:
+                self.makeDeeperTree = False
+                self.pointer = Node()
+                self.nodeName = 0
+                self.max_score = 0
+                self.max_score_path = []
+                # save a copy of the board
+                self.Save()
+                self.Calculate()
+            
+            if len(self.max_score_path) > 0:
+                selected_cell = [0,self.max_score_path.pop()]
+            else:
+                col = 0
+                while self.board[0][col] == 0:
+                    col += 1
+                selected_cell = [0,col]
+            print("[>] Computer select cell 0-5 >",selected_cell[1])
+            self.Move(selected_cell, False)
+
     def Calculate(self):
         print("\nCalculate:")
         goAgain = True
@@ -69,7 +90,7 @@ class Mancala:
 
         while goAgain:
             steps += 1
-            print("Continue #"+str(steps)+" >")
+            #input("Continue #"+str(steps)+" >")
             goAgain = False
             if cell < 6:
                 print("Board before move:",self.board)
@@ -119,7 +140,7 @@ class Mancala:
                             tmp = None
                             goAgain = False
                             print("Max score:",self.max_score)
-                            self.max_score_path = list(reversed(self.max_score_path))
+                            #self.max_score_path = list(reversed(self.max_score_path))
                             print("Path to max score:",self.max_score_path)
                 self.Load()
 
@@ -152,6 +173,8 @@ class Mancala:
                 inx = tmpointer.prev.next.index(tmpointer)
                 self.max_score_path.append(inx)
                 tmpointer = tmpointer.prev
+            print("New max score:",self.max_score)
+            print("Path:",self.max_score_path)
 
     def Load(self):
         print("\nLoad:")
@@ -176,13 +199,14 @@ class Mancala:
             return 1
 
     def Move(self, selected_cell, simulation):
-        #print("\nMove:")
+        print("\nMove:")
         go_again = True
         row = selected_cell[0]
         col = selected_cell[1]
         while go_again:
             go_again = False
-            print("Pick from: "+str(row)+","+str(col))
+            if not simulation:
+                print("Pick from: "+str(row)+","+str(col))
 
             # take all the stones from the selected cell to hand
             hand = self.board[row][col]
@@ -213,7 +237,8 @@ class Mancala:
                         if self.turn == 'computer':
                             hand -= 1
                             self.computerGoal += 1
-            self.Display()
+            if not simulation:
+                self.Display()
 
             # end
             if col != -1 and col != 6:
@@ -224,6 +249,8 @@ class Mancala:
             switch_turn = True
             if self.turn == 'player' and col == 6: # player select again
                 switch_turn = False
+            if self.turn == 'computer' and col == -1: # player select again
+                switch_turn = False
 
             if switch_turn:
                 if self.turn == 'player':
@@ -231,14 +258,55 @@ class Mancala:
                 else:
                     self.turn ='player'
             
-            self.Select()
+            # winner test
+            game_over = False
+            if self.computerGoal > 24:
+                print("Computer won the game!")
+                game_over = True
+
+            if self.playerGoal > 24:
+                print("Player won the game!")
+                game_over = True
+
+            if self.playerGoal == 24 and self.computerGoal == 24:
+                print("Its a draw!")
+                game_over = True
+            
+            # paralized test
+            computerParalized = True
+            playerParalized = True
+            for i in self.board[0]:
+                if i > 0:
+                    computerParalized = False
+            for i in self.board[1]:
+                if i > 0:
+                    playerParalized = False
+            
+            if computerParalized and self.turn == 'computer':
+                self.turn = 'player'
+            
+            if playerParalized and self.turn == 'player':
+                self.turn = 'computer'
+
+            if computerParalized and playerParalized:
+                if self.playerGoal > self.computerGoal:
+                    print("Player won the game!")
+                elif self.playerGoal < self.computerGoal:
+                    print("Computer won the game!")
+                elif self.playerGoal == self.computerGoal:
+                    print("Its a draw!")   
+                game_over = True
+
+            # play again
+            if not game_over:
+                self.Select()
+
         else:
             if self.turn == 'computer' and col == -1: # continue the tree deeper
                 self.makeDeeperTree = True
 
-
     def Display(self):
-        #print("\nDisplay:")
+        print("\nDisplay:")
         print(self.board[0])
         print(self.board[1])
         print('PL $'+str(self.playerGoal))
