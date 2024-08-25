@@ -1,4 +1,6 @@
 import sys
+import MancalaGUI
+
 class Node:
     def __init__(self):
         self.board = [[4,4,4,4,4,4],[4,4,4,4,4,4]] # this is the board before move
@@ -37,6 +39,12 @@ class Mancala:
         self.nodeName = 0
         self.max_score = 0
         self.max_score_path = []
+
+        # gui
+        self.gui = MancalaGUI.GUI()
+        self.gui.SetupGUI()
+        self.gui.DrawBoard()
+        self.gui.MainLoop()
 
         # show board before game start
         self.Display()
