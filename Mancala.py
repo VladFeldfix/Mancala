@@ -262,15 +262,16 @@ class Mancala:
             
             # winner test
             game_over = False
-            if self.computerGoal > self.starting_with/2:
+            winning_sum = (self.starting_with*12)/2
+            if self.computerGoal > winning_sum:
                 print("Computer won the game!")
                 game_over = True
 
-            if self.playerGoal > self.starting_with/2:
+            if self.playerGoal > winning_sum:
                 print("Player won the game!")
                 game_over = True
 
-            if self.playerGoal == self.starting_with/2 and self.computerGoal == self.starting_with/2:
+            if self.playerGoal == winning_sum and self.computerGoal == winning_sum:
                 print("Its a draw!")
                 game_over = True
             
