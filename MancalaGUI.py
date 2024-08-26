@@ -5,7 +5,14 @@ from PIL import ImageTk, Image
 from tkinter import filedialog
 import os
 
-class GUI:    
+class GUI:
+    def __init__(self):
+        # global variables
+        self.images = {}
+
+        # run
+        self.SetupGUI()
+
     def SetupGUI(self):
         # setup main window
         self.root = tkinter.Tk()
@@ -22,20 +29,32 @@ class GUI:
         # setup canvas
         self.canvas = Canvas(self.root, width=self.W, height=self.H, bg="black")
         self.canvas.grid(row=0, column=0)
-    
-    def DrawBoard(self):
-        print("its alive")
-        # draw board
-        image_path = "clean.png"
-        image = Image.open(image_path)
-        image = image.resize((self.W,self.H), Image.LANCZOS)
-        photo = ImageTk.PhotoImage(image)
-        self.canvas.create_image(0, 0, anchor=NW, image=photo)
-    
-    def MainLoop(self):
-        print("mainloop")
+
+        # load images
+        for path, directories, files in os.walk('images'):
+            for file in files:
+                if ".png" in file:
+                    self.LoadImage("images/"+file)
+
+        
+        # create objects
+        obj_board = self.canvas.create_image(0, 0, image=self.images["clean"], anchor=NW)
+
+        # run main loop
         self.root.mainloop()
-    
+
+    def LoadImage(self, filename):
+        image = Image.open(filename)
+        image = image.resize((self.W,self.H), Image.LANCZOS)
+        image = ImageTk.PhotoImage(image)
+        self.images[filename.replace("images/", "").replace(".png", "")] = image
+
+    def UpdateSprite(self, Object, Sprite):
+        self.canvas.itemconfig(Object, image = Sprite)
+
     def exit(self):
         self.root.destroy()
         os._exit(1)
+
+
+GUI()
