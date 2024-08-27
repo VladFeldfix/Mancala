@@ -35,11 +35,6 @@ class Functions:
         self.Display()
     
     def Select(self, col):
-        # player turn
-        if self.turn == 'player':
-            selected_cell = [1,col]
-            self.Move(selected_cell, False)
-        """
         print("\nSelect:")
         print("Waiting for input from:",self.turn)
 
@@ -79,7 +74,6 @@ class Functions:
                 selected_cell = [0,col]
             #print("[>] Computer select cell 0-5 >",selected_cell[1])
             self.Move(selected_cell, False)
-        """
 
     def Calculate(self):
         #print("\nCalculate:")
@@ -301,8 +295,7 @@ class Functions:
 
             # play again
             if not game_over:
-                #self.Select()
-                pass
+                self.Select()
 
         else:
             if self.turn == 'computer' and col == -1: # continue the tree deeper

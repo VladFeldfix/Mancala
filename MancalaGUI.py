@@ -5,6 +5,7 @@ from PIL import ImageTk, Image
 from tkinter import filedialog
 import os
 import random
+from Mancala import Functions
 
 class GUI:
     def __init__(self):
@@ -16,6 +17,7 @@ class GUI:
         self.playerGoal = 0
         self.cells = [[],[]]
         self.cellsText = [[4,4,4,4,4,4],[4,4,4,4,4,4]]
+        self.mancala = Functions()
 
         # run
         self.SetupGUI()
@@ -107,13 +109,13 @@ class GUI:
             for col in range(6):
                 x = 170+col*105
                 y = 170+row*100
-                obj_text = self.canvas.create_text(x,y,fill="green",font="Arial 20 bold",text=self.board[row][col])
+                obj_text = self.canvas.create_text(x,y,fill="black",font="Arial 20 bold",text=self.board[row][col])
                 self.cellsText[row][col] = obj_text
         
         # for goals
-        self.computer_goal_text = self.canvas.create_text(90,360,fill="green",font="Arial 20 bold",text="Compter: "+str(self.computerGoal))
-        self.player_goal_text = self.canvas.create_text(850,150,fill="green",font="Arial 20 bold",text="Player: "+str(self.playerGoal))
-
+        self.computer_goal_text = self.canvas.create_text(100,360,fill="black",font="Arial 20 bold",text="Computer: "+str(self.computerGoal))
+        self.player_goal_text = self.canvas.create_text(840,150,fill="black",font="Arial 20 bold",text="Player: "+str(self.playerGoal))
+        
         # run main loop
         self.root.mainloop()
         
@@ -217,9 +219,11 @@ class GUI:
     def AddToGoal(self, pcpl, num):
         if pcpl == "computer":
             self.computerGoal += num
+            self.canvas.itemconfig(self.computer_goal_text, text ="Computer: "+str(self.computerGoal))
             self.UpdateSprite(self.obj_computer_goal, self.GetGoalImg('computer'))
         else:
             self.playerGoal += num
+            self.canvas.itemconfig(self.player_goal_text, text ="Player: "+str(self.playerGoal))
             self.UpdateSprite(self.obj_player_goal, self.GetGoalImg('player'))
 
     def AddToCell(self, row, col, num):
@@ -271,6 +275,23 @@ class GUI:
 
     def click(event, self):
         button = self.canvas.gettags("current")[0] # string type with values: btn0, btn1 .. btn5
+        inx = int(button.replace("btn",""))
+        if self.board[1][inx] > 0 and self.mancala.turn == 'player':
+            self.mancala.Select(inx)
+            self.PlayAnimation(0)
+
+    def PlayAnimation(self, inx):
+        data = self.mancala.animations[inx]
+        next_animation = data[0]
+
+        if next_animation == "AnimationPutToCell":
+            self.AnimationPutToCell(row, col, self.moving_animation_top)
+        if next_animation == "AnimationPutToGoal":
+            self.AnimationPutToGoal(goal, self.moving_animation_top)
+        if next_animation == "AnimationTakeFromCell":
+            self.AnimationTakeFromCell(row, col, num, self.a)
+        if next_animation == "AnimationTakeFromGoal":
+            self.AnimationTakeFromGoal(goal, num, end)
 
     def exit(self):
         self.root.destroy()
