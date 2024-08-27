@@ -12,7 +12,7 @@ class GUI:
         self.images = {}
         self.board = [[4,4,4,4,4,4],[4,4,4,4,4,4]]
         #self.board = [[13,0,3,4,5,6],[7,8,9,10,11,12]]
-        self.computerGoal = 5
+        self.computerGoal = 0
         self.playerGoal = 0
         self.cells = [[],[]]
 
@@ -32,6 +32,7 @@ class GUI:
         self.root.columnconfigure(0, weight=1)
         self.root.rowconfigure(0, weight=1)
         self.moving_animation_length = 1000
+        self.moving_animation_top = -100
 
         # setup canvas
         self.canvas = Canvas(self.root, width=self.W, height=self.H, bg="black")
@@ -45,8 +46,9 @@ class GUI:
                     if "-goal-no-background" in file:
                         transpose_one = True
                     resize = not "-single-marble-no-background" in file
+                    original_size = "button.png" in file
                     path = path.replace("\\","/")
-                    self.LoadImage(path+"/"+file, transpose_one, resize)       
+                    self.LoadImage(path+"/"+file, transpose_one, resize, original_size)
         # create objects
         obj_board = self.canvas.create_image(0, 0, image=self.images["images/clean"], anchor=NW)
         
@@ -81,16 +83,73 @@ class GUI:
 
         # sigle stone
         single_stone_img = self.GetSingleStoneImg()
-        self.obj_single_stone = self.canvas.create_image(100, 100, image=single_stone_img, anchor=NW)
-        #self.AddToCell(0,2,8)
-        #self.AddToGoal('computer',5)
-        #self.AddToGoal('player',13)
-        #self.AnimationTakeFromCell(1,1,4,self.moving_animation_length)
-        self.AnimationTakeFromGoal("computer", 5, self.moving_animation_length)
+        self.obj_single_stone = self.canvas.create_image(-500, -500, image=single_stone_img, anchor=NW)
+
+        # select cell buttons
+        for col in range(6):
+            x1 = 170+col*105
+            y1 = 270
+            #x2 = x1+80
+            #y2 = y1+70
+            tag_name = "btn"+str(col)
+            #obj_button = self.canvas.create_oval(x1,y1,x2,y2,fill='red',tag=tag_name)
+            btn_img = self.images["images/buttons/button"]
+            self.canvas.create_image(x1, y1, image=btn_img, anchor=NW, tag=tag_name)
+            self.canvas.tag_bind(tag_name, "<Enter>", lambda event: self.check_hand_enter())
+            self.canvas.tag_bind(tag_name, "<Leave>", lambda event: self.check_hand_leave())
+            self.canvas.tag_bind(tag_name, "<Button-1>", lambda event: self.click(self))
+            #self.canvas.itemconfigure(tag_name, state='hidden')
 
         # run main loop
         self.root.mainloop()
         
+    def AnimationPutToCell(self, row, col, top):
+        go_again = False
+        end = 160+row*103
+        if top == self.moving_animation_top:
+            go_again = True
+            self.UpdateSprite(self.obj_single_stone, self.GetSingleStoneImg())
+            self.canvas.coords(self.obj_single_stone, 200+col*100, top)
+
+        if top < end:
+            go_again = True
+            self.canvas.move(self.obj_single_stone, 0, 2)
+            top += 2
+        else:
+            # animation over
+            print("animation over")
+            self.AddToCell(row, col, 1)
+            self.canvas.coords(self.obj_single_stone, -500, -500)
+        
+        if go_again:
+            self.root.after(1, lambda:self.AnimationPutToCell(row, col, top))
+
+    def AnimationPutToGoal(self, goal, top):
+        go_again = False
+        end = 250
+        if goal == "computer":
+            x = 80
+        else:
+            x = 800
+        
+        if top == self.moving_animation_top:
+            go_again = True
+            self.UpdateSprite(self.obj_single_stone, self.GetSingleStoneImg())
+            self.canvas.coords(self.obj_single_stone, x, top)
+
+        if top < end:
+            go_again = True
+            self.canvas.move(self.obj_single_stone, 0, 2)
+            top += 2
+        else:
+            # animation over
+            print("animation over")
+            self.AddToGoal(goal, 1)
+            self.canvas.coords(self.obj_single_stone, -500, -500)
+        
+        if go_again:
+            self.root.after(1, lambda:self.AnimationPutToGoal(goal, top))
+
     def AnimationTakeFromCell(self, row, col, num, end):
         go_again = False
         if end == self.moving_animation_length:
@@ -110,6 +169,10 @@ class GUI:
         
         if go_again:
             self.root.after(1, lambda:self.AnimationTakeFromCell(row, col, num, end))
+        else:
+            # animation over
+            print("animation over")
+
 
     def AnimationTakeFromGoal(self, goal, num, end):
         go_again = False
@@ -133,6 +196,9 @@ class GUI:
         
         if go_again:
             self.root.after(1, lambda:self.AnimationTakeFromGoal(goal, num, end))
+        else:
+            # animation over
+            print("animation over")
 
     def AddToGoal(self, pcpl, num):
         if pcpl == "computer":
@@ -146,12 +212,13 @@ class GUI:
         self.board[row][col] += num
         self.UpdateSprite(self.cells[row][col], self.GetCellImg(row, col))
 
-    def LoadImage(self, filename, transpose_one, resize):
+    def LoadImage(self, filename, transpose_one, resize, original_size):
         image = Image.open(filename)
-        if resize:
-            image = image.resize((self.W,self.H), Image.LANCZOS)
-        else:
-            image = image.resize((int(111/2),int(114/2)), Image.LANCZOS)
+        if not original_size:
+            if resize:
+                image = image.resize((self.W,self.H), Image.LANCZOS)
+            else:
+                image = image.resize((int(111/2),int(114/2)), Image.LANCZOS)
         photoimage = ImageTk.PhotoImage(image)
         self.images[filename.replace(".png", "")] = photoimage
         if transpose_one:
@@ -180,6 +247,15 @@ class GUI:
 
     def UpdateSprite(self, Object, Sprite):
         self.canvas.itemconfig(Object, image = Sprite)
+
+    def check_hand_enter(self):
+        self.canvas.config(cursor="hand2")
+
+    def check_hand_leave(self):
+        self.canvas.config(cursor="")
+
+    def click(event, self):
+        button = self.canvas.gettags("current")[0] # string type with values: btn0, btn1 .. btn5
 
     def exit(self):
         self.root.destroy()
