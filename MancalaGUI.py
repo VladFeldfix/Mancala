@@ -15,6 +15,7 @@ class GUI:
         self.computerGoal = 0
         self.playerGoal = 0
         self.cells = [[],[]]
+        self.cellsText = [[4,4,4,4,4,4],[4,4,4,4,4,4]]
 
         # run
         self.SetupGUI()
@@ -99,6 +100,19 @@ class GUI:
             self.canvas.tag_bind(tag_name, "<Leave>", lambda event: self.check_hand_leave())
             self.canvas.tag_bind(tag_name, "<Button-1>", lambda event: self.click(self))
             #self.canvas.itemconfigure(tag_name, state='hidden')
+
+        # text
+        # for cells
+        for row in range(2):
+            for col in range(6):
+                x = 170+col*105
+                y = 170+row*100
+                obj_text = self.canvas.create_text(x,y,fill="green",font="Arial 20 bold",text=self.board[row][col])
+                self.cellsText[row][col] = obj_text
+        
+        # for goals
+        self.computer_goal_text = self.canvas.create_text(90,360,fill="green",font="Arial 20 bold",text="Compter: "+str(self.computerGoal))
+        self.player_goal_text = self.canvas.create_text(850,150,fill="green",font="Arial 20 bold",text="Player: "+str(self.playerGoal))
 
         # run main loop
         self.root.mainloop()
@@ -210,6 +224,7 @@ class GUI:
 
     def AddToCell(self, row, col, num):
         self.board[row][col] += num
+        self.canvas.itemconfig(self.cellsText[row][col], text = self.board[row][col])
         self.UpdateSprite(self.cells[row][col], self.GetCellImg(row, col))
 
     def LoadImage(self, filename, transpose_one, resize, original_size):
