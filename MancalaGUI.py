@@ -18,6 +18,7 @@ class GUI:
         self.cells = [[],[]]
         self.cellsText = [[4,4,4,4,4,4],[4,4,4,4,4,4]]
         self.mancala = Functions()
+        self.hand = 0
 
         # run
         self.SetupGUI()
@@ -34,11 +35,11 @@ class GUI:
         self.root.iconbitmap("favicon.ico")
         self.root.columnconfigure(0, weight=1)
         self.root.rowconfigure(0, weight=1)
-        self.moving_animation_length = 1000
+        self.moving_animation_length = 800
         self.moving_animation_top = -100
 
         # setup canvas
-        self.canvas = Canvas(self.root, width=self.W, height=self.H, bg="black")
+        self.canvas = Canvas(self.root, width=self.W, height=self.H, bg="white")
         self.canvas.grid(row=0, column=0)
 
         # load images
@@ -115,6 +116,9 @@ class GUI:
         # for goals
         self.computer_goal_text = self.canvas.create_text(100,360,fill="black",font="Arial 20 bold",text="Computer: "+str(self.computerGoal))
         self.player_goal_text = self.canvas.create_text(840,150,fill="black",font="Arial 20 bold",text="Player: "+str(self.playerGoal))
+
+        # hans
+        self.hand_text = self.canvas.create_text(10,10,fill="black",font="Arial 30 bold",text=str(self.hand))
         
         # run main loop
         self.root.mainloop()
@@ -133,9 +137,12 @@ class GUI:
             top += 2
         else:
             # animation over
-            print("animation over")
+            print("AnimationPutToCell animation over")
+            self.hand -= 1
+            self.canvas.itemconfig(self.hand_text, text = self.hand)
             self.AddToCell(row, col, 1)
             self.canvas.coords(self.obj_single_stone, -500, -500)
+            self.root.after(1000, lambda:self.PlayAnimation())
         
         if go_again:
             self.root.after(1, lambda:self.AnimationPutToCell(row, col, top))
@@ -159,9 +166,12 @@ class GUI:
             top += 2
         else:
             # animation over
-            print("animation over")
+            print("AnimationPutToGoal animation over")
+            self.hand -= 1
+            self.canvas.itemconfig(self.hand_text, text = self.hand)
             self.AddToGoal(goal, 1)
             self.canvas.coords(self.obj_single_stone, -500, -500)
+            self.root.after(1000, lambda:self.PlayAnimation())
         
         if go_again:
             self.root.after(1, lambda:self.AnimationPutToGoal(goal, top))
@@ -172,9 +182,11 @@ class GUI:
             self.AddToCell(row, col, -1)
             self.UpdateSprite(self.obj_single_stone, self.GetSingleStoneImg())
             self.canvas.coords(self.obj_single_stone, 200+col*100, 160+row*103)
+            self.hand += 1
+            self.canvas.itemconfig(self.hand_text, text = self.hand)
             go_again = True
         if end > 0:
-            end -= 1
+            end -= 2
             self.canvas.move(self.obj_single_stone, 0, -2)
             go_again = True
         elif end == 0:
@@ -188,6 +200,7 @@ class GUI:
         else:
             # animation over
             print("animation over")
+            self.PlayAnimation()
 
 
     def AnimationTakeFromGoal(self, goal, num, end):
@@ -215,6 +228,7 @@ class GUI:
         else:
             # animation over
             print("animation over")
+            self.PlayAnimation()
 
     def AddToGoal(self, pcpl, num):
         if pcpl == "computer":
@@ -278,20 +292,28 @@ class GUI:
         inx = int(button.replace("btn",""))
         if self.board[1][inx] > 0 and self.mancala.turn == 'player':
             self.mancala.Select(inx)
-            self.PlayAnimation(0)
+            self.PlayAnimation()
 
-    def PlayAnimation(self, inx):
-        data = self.mancala.animations[inx]
-        next_animation = data[0]
+    def PlayAnimation(self):
+        print("PlayAnimation")
+        if len(self.mancala.animations):
+            self.mancala.animations.reverse()
+            data = self.mancala.animations.pop()
+            self.mancala.animations.reverse()
+            next_animation = data[0]
+            row = data[1]
+            col = data[2]
+            goal = data[3]
+            num = data[4]
 
-        if next_animation == "AnimationPutToCell":
-            self.AnimationPutToCell(row, col, self.moving_animation_top)
-        if next_animation == "AnimationPutToGoal":
-            self.AnimationPutToGoal(goal, self.moving_animation_top)
-        if next_animation == "AnimationTakeFromCell":
-            self.AnimationTakeFromCell(row, col, num, self.a)
-        if next_animation == "AnimationTakeFromGoal":
-            self.AnimationTakeFromGoal(goal, num, end)
+            if next_animation == "AnimationPutToCell":
+                self.AnimationPutToCell(row, col, self.moving_animation_top)
+            if next_animation == "AnimationPutToGoal":
+                self.AnimationPutToGoal(goal, self.moving_animation_top)
+            if next_animation == "AnimationTakeFromCell":
+                self.AnimationTakeFromCell(row, col, num, self.moving_animation_length)
+            if next_animation == "AnimationTakeFromGoal":
+                self.AnimationTakeFromGoal(goal, num, self.moving_animation_length)
 
     def exit(self):
         self.root.destroy()

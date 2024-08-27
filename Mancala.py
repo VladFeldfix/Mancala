@@ -30,6 +30,7 @@ class Functions:
         self.nodeName = 0
         self.max_score = 0
         self.max_score_path = []
+        self.animations = []
 
         # show board before game start
         self.Display()
@@ -212,6 +213,7 @@ class Functions:
             # take all the stones from the selected cell to hand
             hand = self.board[row][col]
             self.board[row][col] = 0
+            self.AddToAnimationList("AnimationTakeFromCell", row, col, self.turn, hand)
 
             # circle while there are stones in hand
             while hand > 0:
@@ -220,24 +222,28 @@ class Functions:
                         col += 1 # point to the next selcted cells
                         hand -= 1
                         self.board[row][col] += 1 # put one stone down from hand to next cell
+                        self.AddToAnimationList("AnimationPutToCell", row, col, self.turn, 1)
                     elif col == 5:
                         col = 6
                         row = 0 # switch to row computer
                         if self.turn == 'player':
                             hand -= 1
                             self.playerGoal += 1
+                            self.AddToAnimationList("AnimationPutToGoal", row, col, self.turn, 1)
                 
                 elif row == 0: # if pointer is on the computer side
                     if col > 0: # didn't reach the goal yet
                         col -= 1 # point to the next selcted cells
                         hand -= 1
                         self.board[row][col] += 1 # put one stone down from hand to next cell
+                        self.AddToAnimationList("AnimationPutToCell", row, col, self.turn, 1)
                     elif col == 0:
                         col = -1
                         row = 1 # switch to row player
                         if self.turn == 'computer':
                             hand -= 1
                             self.computerGoal += 1
+                            self.AddToAnimationList("AnimationPutToGoal", row, col, self.turn, 1)
             if not simulation:
                 self.Display()
 
@@ -314,3 +320,6 @@ class Functions:
         print(self.board[1])
         print('PL $'+str(self.playerGoal))
         print('PC $'+str(self.computerGoal))
+    
+    def AddToAnimationList(self, next_animation, row, col, goal, num):
+        self.animations.append((next_animation, row, col, goal, num))
