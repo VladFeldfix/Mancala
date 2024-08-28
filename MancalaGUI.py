@@ -6,6 +6,7 @@ from tkinter import filedialog
 import os
 import random
 from Mancala import Functions
+import sys
 
 class GUI:
     def __init__(self):
@@ -20,7 +21,7 @@ class GUI:
         self.mancala = Functions()
         self.hand = 0
 
-        # run
+        # run gui
         self.SetupGUI()
 
     def SetupGUI(self):
@@ -125,6 +126,12 @@ class GUI:
 
         # game over
         self.status_text = self.canvas.create_text(self.W/2,(self.H/2)-200,fill="black",font="Arial 50 bold",text="")
+
+        # Play again
+        self.play_again = self.canvas.create_text(self.W-10,self.H-25,fill="black",font="Arial 20 bold",text="< Restrat >",tag="play_again", anchor="e")
+        self.canvas.tag_bind("play_again", "<Enter>", lambda event: self.check_hand_enter_simple())
+        self.canvas.tag_bind("play_again", "<Leave>", lambda event: self.check_hand_leave())
+        self.canvas.tag_bind("play_again", "<Button-1>", lambda event: self.restart())
         
         # run main loop
         self.root.mainloop()
@@ -297,6 +304,9 @@ class GUI:
 
     def check_hand_leave(self):
         self.canvas.config(cursor="")
+    
+    def check_hand_enter_simple(self):
+        self.canvas.config(cursor="hand2")
 
     def click(event, self):
         button = self.canvas.gettags("current")[0] # string type with values: btn0, btn1 .. btn5
@@ -342,5 +352,8 @@ class GUI:
         self.root.destroy()
         os._exit(1)
 
+    def restart(self):
+        self.root.destroy()
+        GUI()
 
 GUI()
