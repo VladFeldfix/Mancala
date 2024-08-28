@@ -99,26 +99,29 @@ class GUI:
             #obj_button = self.canvas.create_oval(x1,y1,x2,y2,fill='red',tag=tag_name)
             btn_img = self.images["images/buttons/button"]
             self.canvas.create_image(x1, y1, image=btn_img, anchor=NW, tag=tag_name)
-            self.canvas.tag_bind(tag_name, "<Enter>", lambda event: self.check_hand_enter())
+            self.canvas.tag_bind(tag_name, "<Enter>", lambda event: self.check_hand_enter(self))
             self.canvas.tag_bind(tag_name, "<Leave>", lambda event: self.check_hand_leave())
             self.canvas.tag_bind(tag_name, "<Button-1>", lambda event: self.click(self))
             #self.canvas.itemconfigure(tag_name, state='hidden')
 
-        # text
+        # TEXT
         # for cells
         for row in range(2):
             for col in range(6):
-                x = 170+col*105
+                x = 165+col*105
                 y = 170+row*100
-                obj_text = self.canvas.create_text(x,y,fill="black",font="Arial 20 bold",text=self.board[row][col])
+                obj_text = self.canvas.create_text(x,y,fill="black",font="Arial 20 bold",text=self.board[row][col], anchor="w")
                 self.cellsText[row][col] = obj_text
         
         # for goals
-        self.computer_goal_text = self.canvas.create_text(100,360,fill="black",font="Arial 20 bold",text="Computer: "+str(self.computerGoal))
-        self.player_goal_text = self.canvas.create_text(840,150,fill="black",font="Arial 20 bold",text="Player: "+str(self.playerGoal))
+        self.computer_goal_text = self.canvas.create_text(30,360,fill="black",font="Arial 20 bold",text="Computer: "+str(self.computerGoal), anchor="w")
+        self.player_goal_text = self.canvas.create_text(780,150,fill="black",font="Arial 20 bold",text="Player: "+str(self.playerGoal), anchor="w")
 
-        # hans
-        self.hand_text = self.canvas.create_text(20,20,fill="black",font="Arial 30 bold",text=str(self.hand))
+        # hand
+        self.hand_text = self.canvas.create_text(10,30,fill="black",font="Arial 30 bold",text=str(self.hand), anchor="w")
+
+        # turn
+        self.turn_text = self.canvas.create_text(10,self.H-30,fill="black",font="Arial 30 bold",text="Turn: "+str(self.mancala.turn), anchor="w")
         
         # run main loop
         self.root.mainloop()
@@ -281,8 +284,11 @@ class GUI:
     def UpdateSprite(self, Object, Sprite):
         self.canvas.itemconfig(Object, image = Sprite)
 
-    def check_hand_enter(self):
-        self.canvas.config(cursor="hand2")
+    def check_hand_enter(event, self):
+        button = self.canvas.gettags("current")[0] # string type with values: btn0, btn1 .. btn5
+        inx = int(button.replace("btn",""))
+        if self.board[1][inx] > 0 and self.mancala.turn == 'Player' and len(self.mancala.animations) == 0:
+            self.canvas.config(cursor="hand2")
 
     def check_hand_leave(self):
         self.canvas.config(cursor="")
@@ -290,7 +296,7 @@ class GUI:
     def click(event, self):
         button = self.canvas.gettags("current")[0] # string type with values: btn0, btn1 .. btn5
         inx = int(button.replace("btn",""))
-        if self.board[1][inx] > 0 and self.mancala.turn == 'player':
+        if self.board[1][inx] > 0 and self.mancala.turn == 'Player' and len(self.mancala.animations) == 0:
             self.mancala.Select(inx)
             self.PlayAnimation()
 
@@ -314,6 +320,10 @@ class GUI:
                 self.root.after(1000, lambda:self.AnimationTakeFromCell(row, col, num, self.moving_animation_length))
             if next_animation == "AnimationTakeFromGoal":
                 self.AnimationTakeFromGoal(goal, num, self.moving_animation_length)
+        else:
+            self.canvas.itemconfig(self.turn_text, text = "Turn: "+self.mancala.turn)
+            if self.mancala.turn == 'Computer':
+                self.mancala.Select(0)
 
     def exit(self):
         self.root.destroy()

@@ -22,7 +22,7 @@ class Functions:
         #self.board = [[1,1,1,1,1,1],[1,1,1,1,1,1]]
         
         # global variables
-        self.turn = 'player'
+        self.turn = 'Player'
         self.computerGoal = 0
         self.playerGoal = 0
         self.makeDeeperTree = False
@@ -37,15 +37,36 @@ class Functions:
     
     def Select(self, col):
         # player turn
-        if self.turn == 'player':
+        if self.turn == 'Player':
             selected_cell = [1,col]
             self.Move(selected_cell, False)
+        elif self.turn == 'Computer':
+            if len(self.max_score_path) == 0:
+                self.makeDeeperTree = False
+                self.pointer = Node()
+                self.nodeName = 0
+                self.max_score = 0
+                self.max_score_path = []
+                # save a copy of the board
+                self.Save()
+                self.Calculate()
+            
+            if len(self.max_score_path) > 0:
+                selected_cell = [0,self.max_score_path.pop()]
+            else:
+                col = 0
+                while self.board[0][col] == 0:
+                    col += 1
+                selected_cell = [0,col]
+            print("[>] Computer select cell 0-5 >",selected_cell[1])
+            self.Move(selected_cell, False)
+
         """
         print("\nSelect:")
         print("Waiting for input from:",self.turn)
 
         # player turn
-        if self.turn == 'player':
+        if self.turn == 'Player':
             col = -1
             while not col in (0,1,2,3,4,5):
                 try:
@@ -60,7 +81,7 @@ class Functions:
                 self.Select()
         
         # computer turn
-        elif self.turn == 'computer':
+        elif self.turn == 'Computer':
             if len(self.max_score_path) == 0:
                 self.makeDeeperTree = False
                 self.pointer = Node()
@@ -83,7 +104,7 @@ class Functions:
         """
 
     def Calculate(self):
-        #print("\nCalculate:")
+        print("\nCalculate:")
         goAgain = True
         cell = 0
         steps = 0
@@ -226,7 +247,7 @@ class Functions:
                     elif col == 5:
                         col = 6
                         row = 0 # switch to row computer
-                        if self.turn == 'player':
+                        if self.turn == 'Player':
                             hand -= 1
                             self.playerGoal += 1
                             self.AddToAnimationList("AnimationPutToGoal", row, col, self.turn, 1)
@@ -240,7 +261,7 @@ class Functions:
                     elif col == 0:
                         col = -1
                         row = 1 # switch to row player
-                        if self.turn == 'computer':
+                        if self.turn == 'Computer':
                             hand -= 1
                             self.computerGoal += 1
                             self.AddToAnimationList("AnimationPutToGoal", row, col, self.turn, 1)
@@ -254,16 +275,16 @@ class Functions:
         
         if not simulation:
             switch_turn = True
-            if self.turn == 'player' and col == 6: # player select again
+            if self.turn == 'Player' and col == 6: # player select again
                 switch_turn = False
-            if self.turn == 'computer' and col == -1: # player select again
+            if self.turn == 'Computer' and col == -1: # player select again
                 switch_turn = False
 
             if switch_turn:
-                if self.turn == 'player':
-                    self.turn = 'computer'
+                if self.turn == 'Player':
+                    self.turn = 'Computer'
                 else:
-                    self.turn ='player'
+                    self.turn ='Player'
             
             # winner test
             game_over = False
@@ -290,11 +311,11 @@ class Functions:
                 if i > 0:
                     playerParalized = False
             
-            if computerParalized and self.turn == 'computer':
-                self.turn = 'player'
+            if computerParalized and self.turn == 'Computer':
+                self.turn = 'Player'
             
-            if playerParalized and self.turn == 'player':
-                self.turn = 'computer'
+            if playerParalized and self.turn == 'Player':
+                self.turn = 'Computer'
 
             if computerParalized and playerParalized:
                 if self.playerGoal > self.computerGoal:
@@ -311,7 +332,7 @@ class Functions:
                 pass
 
         else:
-            if self.turn == 'computer' and col == -1: # continue the tree deeper
+            if self.turn == 'Computer' and col == -1: # continue the tree deeper
                 self.makeDeeperTree = True
 
     def Display(self):
