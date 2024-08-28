@@ -118,7 +118,7 @@ class GUI:
         self.player_goal_text = self.canvas.create_text(840,150,fill="black",font="Arial 20 bold",text="Player: "+str(self.playerGoal))
 
         # hans
-        self.hand_text = self.canvas.create_text(10,10,fill="black",font="Arial 30 bold",text=str(self.hand))
+        self.hand_text = self.canvas.create_text(20,20,fill="black",font="Arial 30 bold",text=str(self.hand))
         
         # run main loop
         self.root.mainloop()
@@ -133,8 +133,8 @@ class GUI:
 
         if top < end:
             go_again = True
-            self.canvas.move(self.obj_single_stone, 0, 2)
-            top += 2
+            self.canvas.move(self.obj_single_stone, 0, 4)
+            top += 4
         else:
             # animation over
             print("AnimationPutToCell animation over")
@@ -142,7 +142,7 @@ class GUI:
             self.canvas.itemconfig(self.hand_text, text = self.hand)
             self.AddToCell(row, col, 1)
             self.canvas.coords(self.obj_single_stone, -500, -500)
-            self.root.after(1000, lambda:self.PlayAnimation())
+            self.root.after(1, lambda:self.PlayAnimation())
         
         if go_again:
             self.root.after(1, lambda:self.AnimationPutToCell(row, col, top))
@@ -162,8 +162,8 @@ class GUI:
 
         if top < end:
             go_again = True
-            self.canvas.move(self.obj_single_stone, 0, 2)
-            top += 2
+            self.canvas.move(self.obj_single_stone, 0, 4)
+            top += 4
         else:
             # animation over
             print("AnimationPutToGoal animation over")
@@ -171,7 +171,7 @@ class GUI:
             self.canvas.itemconfig(self.hand_text, text = self.hand)
             self.AddToGoal(goal, 1)
             self.canvas.coords(self.obj_single_stone, -500, -500)
-            self.root.after(1000, lambda:self.PlayAnimation())
+            self.root.after(1, lambda:self.PlayAnimation())
         
         if go_again:
             self.root.after(1, lambda:self.AnimationPutToGoal(goal, top))
@@ -186,8 +186,8 @@ class GUI:
             self.canvas.itemconfig(self.hand_text, text = self.hand)
             go_again = True
         if end > 0:
-            end -= 2
-            self.canvas.move(self.obj_single_stone, 0, -2)
+            end -= 4
+            self.canvas.move(self.obj_single_stone, 0, -4)
             go_again = True
         elif end == 0:
             end = self.moving_animation_length
@@ -311,7 +311,7 @@ class GUI:
             if next_animation == "AnimationPutToGoal":
                 self.AnimationPutToGoal(goal, self.moving_animation_top)
             if next_animation == "AnimationTakeFromCell":
-                self.AnimationTakeFromCell(row, col, num, self.moving_animation_length)
+                self.root.after(1000, lambda:self.AnimationTakeFromCell(row, col, num, self.moving_animation_length))
             if next_animation == "AnimationTakeFromGoal":
                 self.AnimationTakeFromGoal(goal, num, self.moving_animation_length)
 
