@@ -30,13 +30,13 @@ class GUI:
         self.H = int(1080/2)
         self.root.geometry(str(self.W)+"x"+str(self.H))
         self.root.minsize(self.W,self.H)
-        self.root.title("Sudoku Solver v1.0")
+        self.root.title("Mancala v1.0")
         self.root.protocol("WM_DELETE_WINDOW", self.exit)
         self.root.iconbitmap("favicon.ico")
         self.root.columnconfigure(0, weight=1)
         self.root.rowconfigure(0, weight=1)
-        self.moving_animation_length = 800
-        self.moving_animation_top = -100
+        self.moving_animation_length = 400
+        self.moving_animation_top = -50
 
         # setup canvas
         self.canvas = Canvas(self.root, width=self.W, height=self.H, bg="white")
@@ -79,10 +79,10 @@ class GUI:
 
         # goals
         # computer goal
-        pcg_img = self.GetGoalImg('computer')
+        pcg_img = self.GetGoalImg('Computer')
         self.obj_computer_goal = self.canvas.create_image(0, 0, image=pcg_img, anchor=NW)
         # player goal
-        plg_img = self.GetGoalImg('player')
+        plg_img = self.GetGoalImg('Player')
         self.obj_player_goal = self.canvas.create_image(-13, -10, image=plg_img, anchor=NW)
 
         # sigle stone
@@ -122,6 +122,9 @@ class GUI:
 
         # turn
         self.turn_text = self.canvas.create_text(10,self.H-30,fill="black",font="Arial 30 bold",text="Turn: "+str(self.mancala.turn), anchor="w")
+
+        # game over
+        self.status_text = self.canvas.create_text(self.W/2,(self.H/2)-200,fill="black",font="Arial 50 bold",text="")
         
         # run main loop
         self.root.mainloop()
@@ -153,7 +156,7 @@ class GUI:
     def AnimationPutToGoal(self, goal, top):
         go_again = False
         end = 250
-        if goal == "computer":
+        if goal == "Computer":
             x = 80
         else:
             x = 800
@@ -211,7 +214,7 @@ class GUI:
         if end == self.moving_animation_length:
             self.AddToGoal(goal, -1)
             self.UpdateSprite(self.obj_single_stone, self.GetSingleStoneImg())
-            if goal == "computer":
+            if goal == "Computer":
                 self.canvas.coords(self.obj_single_stone, 100, 250)
             else:
                 self.canvas.coords(self.obj_single_stone, 800, 250)
@@ -234,14 +237,16 @@ class GUI:
             self.PlayAnimation()
 
     def AddToGoal(self, pcpl, num):
-        if pcpl == "computer":
+        if pcpl == "Computer":
             self.computerGoal += num
             self.canvas.itemconfig(self.computer_goal_text, text ="Computer: "+str(self.computerGoal))
-            self.UpdateSprite(self.obj_computer_goal, self.GetGoalImg('computer'))
+            if self.computerGoal < 26:
+                self.UpdateSprite(self.obj_computer_goal, self.GetGoalImg('Computer'))
         else:
             self.playerGoal += num
             self.canvas.itemconfig(self.player_goal_text, text ="Player: "+str(self.playerGoal))
-            self.UpdateSprite(self.obj_player_goal, self.GetGoalImg('player'))
+            if self.playerGoal < 26:
+                self.UpdateSprite(self.obj_player_goal, self.GetGoalImg('Player'))
 
     def AddToCell(self, row, col, num):
         self.board[row][col] += num
@@ -270,7 +275,7 @@ class GUI:
     
     def GetGoalImg(self, pcpl):
         transpose = ""
-        if pcpl == "computer":
+        if pcpl == "Computer":
             number_of_stones = self.computerGoal
         else:
             number_of_stones = self.playerGoal
@@ -297,11 +302,15 @@ class GUI:
         button = self.canvas.gettags("current")[0] # string type with values: btn0, btn1 .. btn5
         inx = int(button.replace("btn",""))
         if self.board[1][inx] > 0 and self.mancala.turn == 'Player' and len(self.mancala.animations) == 0:
-            self.mancala.Select(inx)
-            self.PlayAnimation()
+            if not self.mancala.game_over:
+                self.mancala.Select(inx)
+                self.PlayAnimation()
+            else:
+                self.canvas.itemconfig(self.status_text, text = self.mancala.status)
 
     def PlayAnimation(self):
         #print("PlayAnimation")
+        self.canvas.config(cursor="")
         if len(self.mancala.animations):
             self.mancala.animations.reverse()
             data = self.mancala.animations.pop()
@@ -323,8 +332,11 @@ class GUI:
         else:
             self.canvas.itemconfig(self.turn_text, text = "Turn: "+self.mancala.turn)
             if self.mancala.turn == 'Computer':
-                self.mancala.Select(0)
-                self.PlayAnimation()
+                if not self.mancala.game_over:
+                    self.mancala.Select(0)
+                    self.root.after(1000, lambda: self.PlayAnimation())
+                else:
+                    self.canvas.itemconfig(self.status_text, text = self.mancala.status)
 
     def exit(self):
         self.root.destroy()
