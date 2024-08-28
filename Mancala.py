@@ -10,7 +10,7 @@ class Node:
 
 class Functions:    
     def __init__(self):
-        print('\nSetup:')
+        print('SETUP')
 
         # board
         #          [4,4,4,4,4,4] player
@@ -36,9 +36,12 @@ class Functions:
         self.Display()
     
     def Select(self, col):
+        print("SELECT")
+        print("WAITING FOR INPUT FROM: "+self.turn.upper())
         # player turn
         if self.turn == 'Player':
             selected_cell = [1,col]
+            print("SELECTED CELL >"+str(selected_cell[1]))
             self.Move(selected_cell, False)
         elif self.turn == 'Computer':
             if len(self.max_score_path) == 0:
@@ -58,12 +61,12 @@ class Functions:
                 while self.board[0][col] == 0:
                     col += 1
                 selected_cell = [0,col]
-            print("[>] Computer select cell 0-5 >",selected_cell[1])
+            #print("[>] Computer select cell 0-5 >",selected_cell[1])
             self.Move(selected_cell, False)
 
         """
-        print("\nSelect:")
-        print("Waiting for input from:",self.turn)
+        ##print("Select:")
+        #print("Waiting for input from:",self.turn)
 
         # player turn
         if self.turn == 'Player':
@@ -77,7 +80,7 @@ class Functions:
             if self.board[1][col] > 0:
                 self.Move(selected_cell, False)
             else:
-                #print("[X] Can't select an empty cell")
+                ##print("[X] Can't select an empty cell")
                 self.Select()
         
         # computer turn
@@ -99,12 +102,12 @@ class Functions:
                 while self.board[0][col] == 0:
                     col += 1
                 selected_cell = [0,col]
-            #print("[>] Computer select cell 0-5 >",selected_cell[1])
+            ##print("[>] Computer select cell 0-5 >",selected_cell[1])
             self.Move(selected_cell, False)
         """
 
     def Calculate(self):
-        print("\nCalculate:")
+        print("CALCULATING...")
         goAgain = True
         cell = 0
         steps = 0
@@ -115,8 +118,8 @@ class Functions:
             #input("Continue #"+str(steps)+" >")
             goAgain = False
             if cell < 6:
-                #print("Board before move:",self.board)
-                #print("[>] Computer select cell 0-5 >",cell)
+                ##print("Board before move:",self.board)
+                ##print("[>] Computer select cell 0-5 >",cell)
                 if self.board[0][cell] > 0:
                     self.Move([0,cell], True)
                     self.pointer.next[cell] = Node()
@@ -127,16 +130,16 @@ class Functions:
                     if not self.makeDeeperTree:
                         goAgain = True
                         cell += 1
-                        #print("[!] This tree gives",self.computerGoal,"points")
+                        ##print("[!] This tree gives",self.computerGoal,"points")
                         self.GoUp()
                         self.Load()
                     else:
-                        #print("[!] This tree has another level")
+                        ##print("[!] This tree has another level")
                         goAgain = True
                         cell = 0
                         self.makeDeeperTree = False
                 else:
-                    #print("[X] this cell is empty")
+                    ##print("[X] this cell is empty")
                     self.pointer.next[cell] = "Empty"
                     cell += 1
                     goAgain = True
@@ -148,7 +151,7 @@ class Functions:
                 while tmp != None:
                     if i < 6:
                         tmp = self.pointer.next[i]
-                        #print("will go to",i,"next")
+                        ##print("will go to",i,"next")
                         cell = i
                         i += 1
                         goAgain = True
@@ -161,14 +164,14 @@ class Functions:
                         else:
                             tmp = None
                             goAgain = False
-                            #print("Max score:",self.max_score)
+                            ##print("Max score:",self.max_score)
                             #self.max_score_path = list(reversed(self.max_score_path))
-                            #print("Path to max score:",self.max_score_path)
+                            ##print("Path to max score:",self.max_score_path)
                 self.Load()
-
+        print("DONE")
 
     def Save(self):
-        #print("\nSave:")
+        ###print("Save:")
         
         # save a copy of the board
         tmpBoard = [[0,0,0,0,0,0],[0,0,0,0,0,0]]
@@ -180,7 +183,7 @@ class Functions:
         tmpGoal = self.computerGoal
 
         # display for user
-        #print("#"+str(self.nodeName),tmpBoard,"$"+str(tmpGoal))
+        ##print("#"+str(self.nodeName),tmpBoard,"$"+str(tmpGoal))
 
         # save to database
         self.pointer.board = tmpBoard
@@ -195,11 +198,11 @@ class Functions:
                 inx = tmpointer.prev.next.index(tmpointer)
                 self.max_score_path.append(inx)
                 tmpointer = tmpointer.prev
-            #print("New max score:",self.max_score)
-            #print("Path:",self.max_score_path)
+            ##print("New max score:",self.max_score)
+            ##print("Path:",self.max_score_path)
 
     def Load(self):
-        #print("\nLoad:")
+        ###print("Load:")
 
         # load a copy of the board
         for row in range(2):
@@ -210,26 +213,25 @@ class Functions:
         self.computerGoal = self.pointer.score
 
         # display for user
-        #print("#"+str(self.pointer.name),self.board,"$"+str(self.computerGoal))
+        ##print("#"+str(self.pointer.name),self.board,"$"+str(self.computerGoal))
 
     def GoUp(self):
         if self.pointer.prev != None:
             tmp = self.pointer
             self.pointer = tmp.prev
-            #print("Go up to ->",self.pointer.name)
+            ##print("Go up to ->",self.pointer.name)
         else:
             return 1
 
     def Move(self, selected_cell, simulation):
-        if not simulation:
-            print("\nMove:")
         go_again = True
         row = selected_cell[0]
         col = selected_cell[1]
         while go_again:
             go_again = False
             if not simulation:
-                print("Pick from: "+str(row)+","+str(col))
+                print("PICK FROM >"+str(row)+","+str(col))
+                pass
 
             # take all the stones from the selected cell to hand
             hand = self.board[row][col]
@@ -290,15 +292,15 @@ class Functions:
             game_over = False
             winning_sum = (self.starting_with*12)/2
             if self.computerGoal > winning_sum:
-                print("Computer won the game!")
+                #print("Computer won the game!")
                 game_over = True
 
             if self.playerGoal > winning_sum:
-                print("Player won the game!")
+                #print("Player won the game!")
                 game_over = True
 
             if self.playerGoal == winning_sum and self.computerGoal == winning_sum:
-                print("Its a draw!")
+                #print("Its a draw!")
                 game_over = True
             
             # paralized test
@@ -319,11 +321,14 @@ class Functions:
 
             if computerParalized and playerParalized:
                 if self.playerGoal > self.computerGoal:
-                    print("Player won the game!")
+                    #print("Player won the game!")
+                    pass
                 elif self.playerGoal < self.computerGoal:
-                    print("Computer won the game!")
+                    #print("Computer won the game!")
+                    pass
                 elif self.playerGoal == self.computerGoal:
-                    print("Its a draw!")   
+                    #print("Its a draw!")   
+                    pass
                 game_over = True
 
             # play again
@@ -336,11 +341,12 @@ class Functions:
                 self.makeDeeperTree = True
 
     def Display(self):
-        print("\nDisplay:")
+        #print("Display:")
         print(self.board[0])
         print(self.board[1])
         print('PL $'+str(self.playerGoal))
         print('PC $'+str(self.computerGoal))
+        pass
     
     def AddToAnimationList(self, next_animation, row, col, goal, num):
         self.animations.append((next_animation, row, col, goal, num))

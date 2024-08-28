@@ -140,7 +140,7 @@ class GUI:
             top += 4
         else:
             # animation over
-            print("AnimationPutToCell animation over")
+            #print("AnimationPutToCell animation over")
             self.hand -= 1
             self.canvas.itemconfig(self.hand_text, text = self.hand)
             self.AddToCell(row, col, 1)
@@ -169,7 +169,7 @@ class GUI:
             top += 4
         else:
             # animation over
-            print("AnimationPutToGoal animation over")
+            #print("AnimationPutToGoal animation over")
             self.hand -= 1
             self.canvas.itemconfig(self.hand_text, text = self.hand)
             self.AddToGoal(goal, 1)
@@ -202,7 +202,7 @@ class GUI:
             self.root.after(1, lambda:self.AnimationTakeFromCell(row, col, num, end))
         else:
             # animation over
-            print("animation over")
+            #print("animation over")
             self.PlayAnimation()
 
 
@@ -230,7 +230,7 @@ class GUI:
             self.root.after(1, lambda:self.AnimationTakeFromGoal(goal, num, end))
         else:
             # animation over
-            print("animation over")
+            #print("animation over")
             self.PlayAnimation()
 
     def AddToGoal(self, pcpl, num):
@@ -301,7 +301,7 @@ class GUI:
             self.PlayAnimation()
 
     def PlayAnimation(self):
-        print("PlayAnimation")
+        #print("PlayAnimation")
         if len(self.mancala.animations):
             self.mancala.animations.reverse()
             data = self.mancala.animations.pop()
@@ -324,6 +324,7 @@ class GUI:
             self.canvas.itemconfig(self.turn_text, text = "Turn: "+self.mancala.turn)
             if self.mancala.turn == 'Computer':
                 self.mancala.Select(0)
+                self.PlayAnimation()
 
     def exit(self):
         self.root.destroy()
