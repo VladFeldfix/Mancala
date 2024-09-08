@@ -128,7 +128,7 @@ class GUI:
         self.status_text = self.canvas.create_text(self.W/2,(self.H/2)-200,fill="black",font="Arial 50 bold",text="")
 
         # Play again
-        self.play_again = self.canvas.create_text(self.W-10,self.H-25,fill="black",font="Arial 20 bold",text="< Restrat >",tag="play_again", anchor="e")
+        self.play_again = self.canvas.create_text(self.W-10,self.H-25,fill="black",font="Arial 20 bold",text="< Restart >",tag="play_again", anchor="e")
         self.canvas.tag_bind("play_again", "<Enter>", lambda event: self.check_hand_enter_simple())
         self.canvas.tag_bind("play_again", "<Leave>", lambda event: self.check_hand_leave())
         self.canvas.tag_bind("play_again", "<Button-1>", lambda event: self.restart())
