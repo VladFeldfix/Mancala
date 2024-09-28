@@ -48,9 +48,9 @@ class GUI:
             for file in files:
                 if ".png" in file:
                     transpose_one = False
-                    if "-goal-no-background" in file:
+                    if "-goal" in file:
                         transpose_one = True
-                    resize = not "-single-marble-no-background" in file
+                    resize = not "-single-marble" in file
                     original_size = "button.png" in file
                     path = path.replace("\\","/")
                     self.LoadImage(path+"/"+file, transpose_one, resize, original_size)
@@ -278,7 +278,7 @@ class GUI:
         number_of_stones = self.board[row][col]
         if number_of_stones > 13:
             number_of_stones = 13
-        return self.images["images/cells/"+str(number_of_stones).zfill(2)+"-single-cell-no-background"]
+        return self.images["images/cells/"+str(number_of_stones).zfill(2)+"-single-cell"]
     
     def GetGoalImg(self, pcpl):
         transpose = ""
@@ -287,11 +287,11 @@ class GUI:
         else:
             number_of_stones = self.playerGoal
             transpose = "-transposed"
-        return self.images["images/goals/"+str(number_of_stones).zfill(2)+"-goal-no-background"+transpose]
+        return self.images["images/goals/"+str(number_of_stones).zfill(2)+"-goal"+transpose]
     
     def GetSingleStoneImg(self):
         color = random.randint(1,5)
-        return self.images["images/stones/"+str(color).zfill(2)+"-single-marble-no-background"]
+        return self.images["images/stones/"+str(color).zfill(2)+"-single-marble"]
 
     def UpdateSprite(self, Object, Sprite):
         self.canvas.itemconfig(Object, image = Sprite)
