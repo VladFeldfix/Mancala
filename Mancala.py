@@ -1,361 +1,367 @@
-import sys
+import tkinter
+from tkinter import *
+from PIL import ImageTk, Image
+import os
+import random
+from functions import Functions
 
-class Node:
+class GUI:
     def __init__(self):
-        self.board = [[4,4,4,4,4,4],[4,4,4,4,4,4]] # this is the board before move
-        self.score = 0
-        self.next = [None,None,None,None,None,None]
-        self.prev = None
-        self.name = 0
-
-class Functions:    
-    def __init__(self):
-        print('SETUP')
-
-        # board
-        #          [4,4,4,4,4,4] player
-        # computer [4,4,4,4,4,4]
-        self.starting_with = 4
-        self.board = [[self.starting_with,self.starting_with,self.starting_with,self.starting_with,self.starting_with,self.starting_with],[self.starting_with,self.starting_with,self.starting_with,self.starting_with,self.starting_with,self.starting_with]]
-        #self.board = [[0,0,0,0,0,0],[3,3,3,3,3,3]]
-        #self.board = [[2,2,2,2,2,2],[2,2,2,2,2,2]]
-        #self.board = [[1,1,1,1,1,1],[1,1,1,1,1,1]]
-        
         # global variables
-        self.turn = 'Player'
+        self.images = {}
+        self.board = [[4,4,4,4,4,4],[4,4,4,4,4,4]]
+        #self.board = [[13,0,3,4,5,6],[7,8,9,10,11,12]]
         self.computerGoal = 0
         self.playerGoal = 0
-        self.makeDeeperTree = False
-        self.pointer = Node()
-        self.nodeName = 0
-        self.max_score = 0
-        self.max_score_path = []
-        self.animations = []
-        self.game_over = False
-        self.status = ""
+        self.cells = [[],[]]
+        self.cellsText = [[4,4,4,4,4,4],[4,4,4,4,4,4]]
+        self.mancala = Functions()
+        self.hand = 0
 
-        # show board before game start
-        self.Display()
-    
-    def Select(self, col):
-        print("SELECT")
-        print("WAITING FOR INPUT FROM: "+self.turn.upper())
-        # player turn
-        if not self.game_over:
-            if self.turn == 'Player':
-                selected_cell = [1,col]
-                print("SELECTED CELL >"+str(selected_cell[1]))
-                self.Move(selected_cell, False)
-            elif self.turn == 'Computer':
-                if len(self.max_score_path) == 0:
-                    self.makeDeeperTree = False
-                    self.pointer = Node()
-                    self.nodeName = 0
-                    self.max_score = 0
-                    self.max_score_path = []
-                    # save a copy of the board
-                    self.Save()
-                    self.Calculate()
-                
-                if len(self.max_score_path) > 0:
-                    selected_cell = [0,self.max_score_path.pop()]
-                else:
-                    col = 0
-                    while self.board[0][col] == 0:
-                        col += 1
-                    selected_cell = [0,col]
-                #print("[>] Computer select cell 0-5 >",selected_cell[1])
-                self.Move(selected_cell, False)
+        # run gui
+        self.SetupGUI()
 
-        """
-        ##print("Select:")
-        #print("Waiting for input from:",self.turn)
+    def SetupGUI(self):
+        # setup main window
+        self.root = tkinter.Tk()
+        self.W = int(4624/4)
+        self.H = int(2084/4)
+        self.root.geometry(str(self.W)+"x"+str(self.H))
+        self.root.minsize(self.W,self.H)
+        self.root.title("Mancala v1.0")
+        self.root.protocol("WM_DELETE_WINDOW", self.exit)
+        self.root.iconbitmap("favicon.ico")
+        self.root.columnconfigure(0, weight=1)
+        self.root.rowconfigure(0, weight=1)
+        self.moving_animation_length = 400
+        self.moving_animation_top = -50
 
-        # player turn
-        if self.turn == 'Player':
-            col = -1
-            while not col in (0,1,2,3,4,5):
-                try:
-                    col = int(input("[>] Player select cell 0-5 >"))
-                except:
-                    col = -1
-            selected_cell = [1,col]
-            if self.board[1][col] > 0:
-                self.Move(selected_cell, False)
-            else:
-                ##print("[X] Can't select an empty cell")
-                self.Select()
+        # setup canvas
+        self.canvas = Canvas(self.root, width=self.W, height=self.H, bg="white")
+        self.canvas.grid(row=0, column=0)
+
+        # load images
+        for path, directories, files in os.walk('images'):
+            for file in files:
+                if ".png" in file:
+                    transpose_one = False
+                    if "-goal" in file:
+                        transpose_one = True
+                    resize = not "-single-marble" in file
+                    original_size = "button.png" in file
+                    path = path.replace("\\","/")
+                    self.LoadImage(path+"/"+file, transpose_one, resize, original_size)
         
-        # computer turn
-        elif self.turn == 'Computer':
-            if len(self.max_score_path) == 0:
-                self.makeDeeperTree = False
-                self.pointer = Node()
-                self.nodeName = 0
-                self.max_score = 0
-                self.max_score_path = []
-                # save a copy of the board
-                self.Save()
-                self.Calculate()
+        # create objects
+        obj_board = self.canvas.create_image(0, 0, image=self.images["images/clean"], anchor=NW)
+        
+        # cells
+        row = 0
+        col = 0
+        for i in range(12):
+            col = i % 6
+            if i > 5:
+                row = 1
             
-            if len(self.max_score_path) > 0:
-                selected_cell = [0,self.max_score_path.pop()]
+            # adjustment
+            if row == 0:
+                col_top = -220
+                col_grid = 115
+                row_top = -120
+                row_grid = 120
             else:
-                col = 0
-                while self.board[0][col] == 0:
-                    col += 1
-                selected_cell = [0,col]
-            ##print("[>] Computer select cell 0-5 >",selected_cell[1])
-            self.Move(selected_cell, False)
+                col_top = -240
+                col_grid = 122
+
+            cell_img = self.GetCellImg(row,col)
+            obj_cell = self.canvas.create_image(col_grid*col+col_top, row_grid*row+row_top, image=cell_img, anchor=NW)
+            self.cells[row].append(obj_cell)
+
+        # goals
+        # computer goal
+        pcg_img = self.GetGoalImg('Computer')
+        self.obj_computer_goal = self.canvas.create_image(0, 0, image=pcg_img, anchor=NW)
+        # player goal
+        plg_img = self.GetGoalImg('Player')
+        self.obj_player_goal = self.canvas.create_image(70, 0, image=plg_img, anchor=NW)
+
+        # sigle stone
+        single_stone_img = self.GetSingleStoneImg()
+        self.obj_single_stone = self.canvas.create_image(-500, -500, image=single_stone_img, anchor=NW)
+
+        # select cell buttons
+        for col in range(6):
+            x1 = 260+col*123
+            y1 = 327
+            #x2 = x1+80
+            #y2 = y1+70
+            tag_name = "btn"+str(col)
+            #obj_button = self.canvas.create_oval(x1,y1,x2,y2,fill='red',tag=tag_name)
+            btn_img = self.images["images/buttons/button"]
+            self.canvas.create_image(x1, y1, image=btn_img, anchor=NW, tag=tag_name)
+            self.canvas.tag_bind(tag_name, "<Enter>", lambda event: self.check_hand_enter(self))
+            self.canvas.tag_bind(tag_name, "<Leave>", lambda event: self.check_hand_leave())
+            self.canvas.tag_bind(tag_name, "<Button-1>", lambda event: self.click(self))
+            #self.canvas.itemconfigure(tag_name, state='hidden')
+
+        # TEXT
+        # for cells
+        for row in range(2):
+            for col in range(6):
+                x = 269+col*115
+                y = 205+row*110
+                obj_text = self.canvas.create_text(x,y,fill="black",font="Arial 20 bold",text=self.board[row][col], anchor="w")
+                self.cellsText[row][col] = obj_text
+        
+        # for goals
+        self.computer_goal_text = self.canvas.create_text(98,425,fill="black",font="Arial 20 bold",text="Computer: "+str(self.computerGoal), anchor="w")
+        self.player_goal_text = self.canvas.create_text(970,425,fill="black",font="Arial 20 bold",text="Player: "+str(self.playerGoal), anchor="w")
+
+        # hand
+        self.hand_text = self.canvas.create_text(10,30,fill="white",font="Arial 30 bold",text=str(self.hand), anchor="w")
+
+        # turn
+        self.turn_text = self.canvas.create_text(10,self.H-30,fill="black",font="Arial 30 bold",text="Turn: "+str(self.mancala.turn), anchor="w")
+
+        # game over
+        self.status_text = self.canvas.create_text(self.W/2,(self.H/2)-100,fill="black",font="Arial 50 bold",text="")
+
+        # Play again
+        self.play_again = self.canvas.create_text(self.W-10,self.H-25,fill="black",font="Arial 20 bold",text="< Restart >",tag="play_again", anchor="e")
+        self.canvas.tag_bind("play_again", "<Enter>", lambda event: self.check_hand_enter_simple())
+        self.canvas.tag_bind("play_again", "<Leave>", lambda event: self.check_hand_leave())
+        self.canvas.tag_bind("play_again", "<Button-1>", lambda event: self.restart())
+        
+        # test
         """
-
-    def Calculate(self):
-        print("CALCULATING...")
-        goAgain = True
-        cell = 0
-        steps = 0
-        self.simulation = True
-
-        while goAgain:
-            steps += 1
-            #input("Continue #"+str(steps)+" >")
-            goAgain = False
-            if cell < 6:
-                ##print("Board before move:",self.board)
-                ##print("[>] Computer select cell 0-5 >",cell)
-                if self.board[0][cell] > 0:
-                    self.Move([0,cell], True)
-                    self.pointer.next[cell] = Node()
-                    tmp = self.pointer
-                    self.pointer = self.pointer.next[cell]
-                    self.pointer.prev = tmp
-                    self.Save()
-                    if not self.makeDeeperTree:
-                        goAgain = True
-                        cell += 1
-                        ##print("[!] This tree gives",self.computerGoal,"points")
-                        self.GoUp()
-                        self.Load()
-                    else:
-                        ##print("[!] This tree has another level")
-                        goAgain = True
-                        cell = 0
-                        self.makeDeeperTree = False
-                else:
-                    ##print("[X] this cell is empty")
-                    self.pointer.next[cell] = "Empty"
-                    cell += 1
-                    goAgain = True
-            else:
-                # going up a level back to where it was
-                self.GoUp()
-                i = 0
-                tmp = 0
-                while tmp != None:
-                    if i < 6:
-                        tmp = self.pointer.next[i]
-                        ##print("will go to",i,"next")
-                        cell = i
-                        i += 1
-                        goAgain = True
-                    else:
-                        goupresult = self.GoUp()
-                        i = 0
-                        cell = i
-                        if goupresult == None:
-                            goAgain = True
-                        else:
-                            tmp = None
-                            goAgain = False
-                            ##print("Max score:",self.max_score)
-                            #self.max_score_path = list(reversed(self.max_score_path))
-                            ##print("Path to max score:",self.max_score_path)
-                self.Load()
-        print("DONE")
-
-    def Save(self):
-        ###print("Save:")
-        
-        # save a copy of the board
-        tmpBoard = [[0,0,0,0,0,0],[0,0,0,0,0,0]]
+        self.UpdateSprite(self.obj_single_stone, self.GetSingleStoneImg())
+        self.canvas.coords(self.obj_single_stone, 180, 270)
         for row in range(2):
             for col in range(6):
-                tmpBoard[row][col] = self.board[row][col]
+                self.UpdateSprite(self.obj_single_stone, self.GetSingleStoneImg())
+                self.canvas.coords(self.obj_single_stone, 290+col*116, 210+row*120)
+        """
+        # run main loop
+        self.root.mainloop()
         
-        # save a copy of the goal
-        tmpGoal = self.computerGoal
-
-        # display for user
-        ##print("#"+str(self.nodeName),tmpBoard,"$"+str(tmpGoal))
-
-        # save to database
-        self.pointer.board = tmpBoard
-        self.pointer.score = tmpGoal
-        self.pointer.name = self.nodeName
-        self.nodeName += 1
-        if self.pointer.score > self.max_score:
-            self.max_score = self.pointer.score
-            tmpointer = self.pointer
-            self.max_score_path = []
-            while tmpointer.prev != None:
-                inx = tmpointer.prev.next.index(tmpointer)
-                self.max_score_path.append(inx)
-                tmpointer = tmpointer.prev
-            ##print("New max score:",self.max_score)
-            ##print("Path:",self.max_score_path)
-
-    def Load(self):
-        ###print("Load:")
-
-        # load a copy of the board
-        for row in range(2):
-            for col in range(6):
-                self.board[row][col] = self.pointer.board[row][col]
-        
-        # load a copy of the goal
-        self.computerGoal = self.pointer.score
-
-        # display for user
-        ##print("#"+str(self.pointer.name),self.board,"$"+str(self.computerGoal))
-
-    def GoUp(self):
-        if self.pointer.prev != None:
-            tmp = self.pointer
-            self.pointer = tmp.prev
-            ##print("Go up to ->",self.pointer.name)
-        else:
-            return 1
-
-    def Move(self, selected_cell, simulation):
-        if not self.game_over:
+    def AnimationPutToCell(self, row, col, top):
+        go_again = False
+        end = 210+row*120
+        if top == self.moving_animation_top:
             go_again = True
-            row = selected_cell[0]
-            col = selected_cell[1]
-            while go_again:
-                go_again = False
-                if not simulation:
-                    print("PICK FROM >"+str(row)+","+str(col))
-                    pass
+            self.UpdateSprite(self.obj_single_stone, self.GetSingleStoneImg())
+            self.canvas.coords(self.obj_single_stone, 290+col*116, top)
 
-                # take all the stones from the selected cell to hand
-                hand = self.board[row][col]
-                self.board[row][col] = 0
-                if not simulation:
-                    self.AddToAnimationList("AnimationTakeFromCell", row, col, self.turn, hand)
+        if top < end:
+            go_again = True
+            self.canvas.move(self.obj_single_stone, 0, 4)
+            top += 4
+        else:
+            # animation over
+            #print("AnimationPutToCell animation over")
+            self.hand -= 1
+            self.canvas.itemconfig(self.hand_text, text = self.hand)
+            self.AddToCell(row, col, 1)
+            self.canvas.coords(self.obj_single_stone, -500, -500)
+            self.root.after(1, lambda:self.PlayAnimation())
+        
+        if go_again:
+            self.root.after(1, lambda:self.AnimationPutToCell(row, col, top))
 
-                # circle while there are stones in hand
-                while hand > 0:
-                    if row == 1: # if pointer is on the players side
-                        if col < 5: # didn't reach the goal yet
-                            col += 1 # point to the next selcted cells
-                            hand -= 1
-                            self.board[row][col] += 1 # put one stone down from hand to next cell
-                            if not simulation:
-                                self.AddToAnimationList("AnimationPutToCell", row, col, self.turn, 1)
-                        elif col == 5:
-                            col = 6
-                            row = 0 # switch to row computer
-                            if self.turn == 'Player':
-                                hand -= 1
-                                self.playerGoal += 1
-                                if not simulation:
-                                    self.AddToAnimationList("AnimationPutToGoal", row, col, self.turn, 1)
-                    
-                    elif row == 0: # if pointer is on the computer side
-                        if col > 0: # didn't reach the goal yet
-                            col -= 1 # point to the next selcted cells
-                            hand -= 1
-                            self.board[row][col] += 1 # put one stone down from hand to next cell
-                            if not simulation:
-                                self.AddToAnimationList("AnimationPutToCell", row, col, self.turn, 1)
-                        elif col == 0:
-                            col = -1
-                            row = 1 # switch to row player
-                            if self.turn == 'Computer':
-                                hand -= 1
-                                self.computerGoal += 1
-                                if not simulation:
-                                    self.AddToAnimationList("AnimationPutToGoal", row, col, self.turn, 1)
-                if not simulation:
-                    self.Display()
+    def AnimationPutToGoal(self, goal, top):
+        go_again = False
+        end = 270
+        if goal == "Computer":
+            x = 180
+        else:
+            x = 990
+        
+        if top == self.moving_animation_top:
+            go_again = True
+            self.UpdateSprite(self.obj_single_stone, self.GetSingleStoneImg())
+            self.canvas.coords(self.obj_single_stone, x, top)
 
-                # end
-                if col != -1 and col != 6:
-                    if self.board[row][col] > 1: # if we landed on a not empty cell then
-                        go_again = True
-            
-            if not simulation:
-                switch_turn = True
-                if self.turn == 'Player' and col == 6: # player select again
-                    switch_turn = False
-                if self.turn == 'Computer' and col == -1: # player select again
-                    switch_turn = False
+        if top < end:
+            go_again = True
+            self.canvas.move(self.obj_single_stone, 0, 4)
+            top += 4
+        else:
+            # animation over
+            #print("AnimationPutToGoal animation over")
+            self.hand -= 1
+            self.canvas.itemconfig(self.hand_text, text = self.hand)
+            self.AddToGoal(goal, 1)
+            self.canvas.coords(self.obj_single_stone, -500, -500)
+            self.root.after(1, lambda:self.PlayAnimation())
+        
+        if go_again:
+            self.root.after(1, lambda:self.AnimationPutToGoal(goal, top))
 
-                if switch_turn:
-                    if self.turn == 'Player':
-                        self.turn = 'Computer'
-                    else:
-                        self.turn ='Player'
-                
-                # winner test
-                self.game_over = False
-                winning_sum = (self.starting_with*12)/2
-                if self.computerGoal > winning_sum:
-                    self.status = "Computer won the game!"
-                    self.game_over = True
+    def AnimationTakeFromCell(self, row, col, num, end):
+        go_again = False
+        if end == self.moving_animation_length:
+            self.AddToCell(row, col, -1)
+            self.UpdateSprite(self.obj_single_stone, self.GetSingleStoneImg())
+            self.canvas.coords(self.obj_single_stone, 290+col*116, 210+row*120)
+            self.hand += 1
+            self.canvas.itemconfig(self.hand_text, text = self.hand)
+            go_again = True
+        if end > 0:
+            end -= 4
+            self.canvas.move(self.obj_single_stone, 0, -4)
+            go_again = True
+        elif end == 0:
+            end = self.moving_animation_length
+            if num > 1:
+                num -= 1
+                go_again = True
+        
+        if go_again:
+            self.root.after(1, lambda:self.AnimationTakeFromCell(row, col, num, end))
+        else:
+            # animation over
+            #print("animation over")
+            self.PlayAnimation()
 
-                if self.playerGoal > winning_sum:
-                    self.status = "Player won the game!"
-                    self.game_over = True
 
-                if self.playerGoal == winning_sum and self.computerGoal == winning_sum:
-                    self.status = "Its a draw!"
-                    self.game_over = True
-                
-                # paralized test
-                computerParalized = True
-                playerParalized = True
-                for i in self.board[0]:
-                    if i > 0:
-                        computerParalized = False
-                for i in self.board[1]:
-                    if i > 0:
-                        playerParalized = False
-                
-                if computerParalized and self.turn == 'Computer':
-                    self.turn = 'Player'
-                
-                if playerParalized and self.turn == 'Player':
-                    self.turn = 'Computer'
-
-                if computerParalized and playerParalized:
-                    if self.playerGoal > self.computerGoal:
-                        self.status = "Player won the game!"
-                        pass
-                    elif self.playerGoal < self.computerGoal:
-                        self.status = "Computer won the game!"
-                        pass
-                    elif self.playerGoal == self.computerGoal:
-                        self.status = "Its a draw!"
-                        pass
-                    self.game_over = True
-
-                # play again
-                if self.game_over:
-                    print("GAME OVER")
-                    pass
-
+    def AnimationTakeFromGoal(self, goal, num, end):
+        go_again = False
+        if end == self.moving_animation_length:
+            self.AddToGoal(goal, -1)
+            self.UpdateSprite(self.obj_single_stone, self.GetSingleStoneImg())
+            if goal == "Computer":
+                self.canvas.coords(self.obj_single_stone, 100, 250)
             else:
-                if self.turn == 'Computer' and col == -1: # continue the tree deeper
-                    self.makeDeeperTree = True
+                self.canvas.coords(self.obj_single_stone, 800, 250)
+            go_again = True
+        if end > 0:
+            end -= 1
+            self.canvas.move(self.obj_single_stone, 0, -2)
+            go_again = True
+        elif end == 0:
+            end = self.moving_animation_length
+            if num > 1:
+                num -= 1
+                go_again = True
+        
+        if go_again:
+            self.root.after(1, lambda:self.AnimationTakeFromGoal(goal, num, end))
+        else:
+            # animation over
+            #print("animation over")
+            self.PlayAnimation()
 
-    def Display(self):
-        #print("Display:")
-        print(self.board[0])
-        print(self.board[1])
-        print('PL $'+str(self.playerGoal))
-        print('PC $'+str(self.computerGoal))
-        pass
+    def AddToGoal(self, pcpl, num):
+        if pcpl == "Computer":
+            self.computerGoal += num
+            self.canvas.itemconfig(self.computer_goal_text, text ="Computer: "+str(self.computerGoal))
+            if self.computerGoal < 26:
+                self.UpdateSprite(self.obj_computer_goal, self.GetGoalImg('Computer'))
+        else:
+            self.playerGoal += num
+            self.canvas.itemconfig(self.player_goal_text, text ="Player: "+str(self.playerGoal))
+            if self.playerGoal < 26:
+                self.UpdateSprite(self.obj_player_goal, self.GetGoalImg('Player'))
+
+    def AddToCell(self, row, col, num):
+        self.board[row][col] += num
+        self.canvas.itemconfig(self.cellsText[row][col], text = self.board[row][col])
+        self.UpdateSprite(self.cells[row][col], self.GetCellImg(row, col))
+
+    def LoadImage(self, filename, transpose_one, resize, original_size):
+        image = Image.open(filename)
+        if not original_size:
+            if resize:
+                image = image.resize((self.W,self.H), Image.LANCZOS)
+            else:
+                image = image.resize((int(111/2),int(114/2)), Image.LANCZOS)
+        photoimage = ImageTk.PhotoImage(image)
+        self.images[filename.replace(".png", "")] = photoimage
+        if transpose_one:
+            image = image.transpose(Image.FLIP_LEFT_RIGHT)
+            photoimage = ImageTk.PhotoImage(image)
+            self.images[filename.replace(".png", "-transposed")] = photoimage
     
-    def AddToAnimationList(self, next_animation, row, col, goal, num):
-        self.animations.append((next_animation, row, col, goal, num))
+    def GetCellImg(self, row, col):
+        number_of_stones = self.board[row][col]
+        if number_of_stones > 19:
+            number_of_stones = 19
+        return self.images["images/cells/"+str(number_of_stones).zfill(2)+"-single-cell"]
+    
+    def GetGoalImg(self, pcpl):
+        transpose = ""
+        if pcpl == "Computer":
+            number_of_stones = self.computerGoal
+        else:
+            number_of_stones = self.playerGoal
+            transpose = "-transposed"
+        return self.images["images/goals/"+str(number_of_stones).zfill(2)+"-goal"+transpose]
+    
+    def GetSingleStoneImg(self):
+        color = random.randint(1,5)
+        return self.images["images/stones/"+str(color).zfill(2)+"-single-marble"]
+
+    def UpdateSprite(self, Object, Sprite):
+        self.canvas.itemconfig(Object, image = Sprite)
+
+    def check_hand_enter(event, self):
+        button = self.canvas.gettags("current")[0] # string type with values: btn0, btn1 .. btn5
+        inx = int(button.replace("btn",""))
+        if self.board[1][inx] > 0 and self.mancala.turn == 'Player' and len(self.mancala.animations) == 0:
+            self.canvas.config(cursor="hand2")
+
+    def check_hand_leave(self):
+        self.canvas.config(cursor="")
+    
+    def check_hand_enter_simple(self):
+        self.canvas.config(cursor="hand2")
+
+    def click(event, self):
+        button = self.canvas.gettags("current")[0] # string type with values: btn0, btn1 .. btn5
+        inx = int(button.replace("btn",""))
+        if self.board[1][inx] > 0 and self.mancala.turn == 'Player' and len(self.mancala.animations) == 0:
+            if not self.mancala.game_over:
+                self.mancala.Select(inx)
+                self.PlayAnimation()
+            else:
+                self.canvas.itemconfig(self.status_text, text = self.mancala.status)
+
+    def PlayAnimation(self):
+        #print("PlayAnimation")
+        self.canvas.config(cursor="")
+        if len(self.mancala.animations):
+            self.mancala.animations.reverse()
+            data = self.mancala.animations.pop()
+            self.mancala.animations.reverse()
+            next_animation = data[0]
+            row = data[1]
+            col = data[2]
+            goal = data[3]
+            num = data[4]
+
+            if next_animation == "AnimationPutToCell":
+                self.AnimationPutToCell(row, col, self.moving_animation_top)
+            if next_animation == "AnimationPutToGoal":
+                self.AnimationPutToGoal(goal, self.moving_animation_top)
+            if next_animation == "AnimationTakeFromCell":
+                self.root.after(1000, lambda:self.AnimationTakeFromCell(row, col, num, self.moving_animation_length))
+            if next_animation == "AnimationTakeFromGoal":
+                self.AnimationTakeFromGoal(goal, num, self.moving_animation_length)
+        else:
+            self.canvas.itemconfig(self.turn_text, text = "Turn: "+self.mancala.turn)
+            if self.mancala.turn == 'Computer':
+                if not self.mancala.game_over:
+                    self.mancala.Select(0)
+                    self.root.after(1000, lambda: self.PlayAnimation())
+                else:
+                    self.canvas.itemconfig(self.status_text, text = self.mancala.status)
+
+    def exit(self):
+        self.root.destroy()
+        os._exit(1)
+
+    def restart(self):
+        self.root.destroy()
+        GUI()
+
+GUI()
