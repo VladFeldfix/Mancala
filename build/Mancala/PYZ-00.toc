@@ -1,4 +1,4 @@
-('D:\\Users\\Vlad\\Projects\\Applications\\Mancala\\build\\Mancala\\PYZ-00.pyz',
+('D:\\Users\\Vlad\\Projects\\Applicationss\\Mancala\\build\\Mancala\\PYZ-00.pyz',
  [('multiprocessing.popen_spawn_posix',
    'C:\\Users\\HP '
    'User\\AppData\\Local\\Programs\\Python\\Python311\\Lib\\multiprocessing\\popen_spawn_posix.py',
@@ -527,13 +527,17 @@
    'C:\\Users\\HP '
    'User\\AppData\\Local\\Programs\\Python\\Python311\\Lib\\multiprocessing\\__init__.py',
    'PYMODULE'),
-  ('tracemalloc',
+  ('_py_abc',
    'C:\\Users\\HP '
-   'User\\AppData\\Local\\Programs\\Python\\Python311\\Lib\\tracemalloc.py',
+   'User\\AppData\\Local\\Programs\\Python\\Python311\\Lib\\_py_abc.py',
    'PYMODULE'),
   ('stringprep',
    'C:\\Users\\HP '
    'User\\AppData\\Local\\Programs\\Python\\Python311\\Lib\\stringprep.py',
+   'PYMODULE'),
+  ('tracemalloc',
+   'C:\\Users\\HP '
+   'User\\AppData\\Local\\Programs\\Python\\Python311\\Lib\\tracemalloc.py',
    'PYMODULE'),
   ('getpass',
    'C:\\Users\\HP '
@@ -563,12 +567,8 @@
    'C:\\Users\\HP '
    'User\\AppData\\Local\\Programs\\Python\\Python311\\Lib\\http\\cookiejar.py',
    'PYMODULE'),
-  ('_py_abc',
-   'C:\\Users\\HP '
-   'User\\AppData\\Local\\Programs\\Python\\Python311\\Lib\\_py_abc.py',
-   'PYMODULE'),
   ('functions',
-   'D:\\Users\\Vlad\\Projects\\Applications\\Mancala\\functions.py',
+   'D:\\Users\\Vlad\\Projects\\Applicationss\\Mancala\\functions.py',
    'PYMODULE'),
   ('random',
    'C:\\Users\\HP '
